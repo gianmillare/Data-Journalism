@@ -159,5 +159,106 @@ function visualize(visual) {
 	  //Call the toolTip Function
 	  svg.call(toolTip);
 
-	  //
+	  //Creating Min and Max function for X and Y
+	  //--> each min and max will grab the smallest and largest datum from that column
+	  function xMinMax() {
+	  	xMin = d3.min(visual, function (d) {
+	  		return parseFloat(d[curX1]) * 0.90;
+	  	});
+	  	xMax = d3.max(visual, function(d) {
+	  		return parseFloat(d[curX1] * 1.10);
+	  	});
+	  }
+
+	  //repeating the above for Y Min and Max
+	  function yMinMax() {
+	  	yMin = d3.min(visual, function (d) {
+	  		return parseFloat(d[curY1]) * 0.90;
+	  	});
+
+	  	yMax = d3.max(visual, function(d) {
+	  		return parseFloat(d[curY1]) * 1.10;
+	  	});
+	  }
+	  // Create a function that changes classes and appearance based on which label is clicked
+	  function changeLabels(axis, clickedText) {
+	  	d3
+	  	  .selectAll(".aText")
+      	  .filter("." + axis)
+      	  .filter(".active")
+      	  .classed("active", false)
+      	  .classed("inactive", true);
+      	//use an "active" & "inactive" code to switch texts
+      	clickedText.classed("inactive", false).classed("active", true);
+	  }
+
+	  //Instantiate the Scatter Plot
+
+	  //start by grabbing the min and max values from the functions we made prior
+	  xMinMax();
+	  yMinMax();
+
+	  //Format the scales based on the areas holding text and margins
+	  var xScale = d3
+	    .scaleLinear()
+	    .domain([xMin, xMax])
+	    .range([margin + labelArea, width - margin]);
+	  var yScale = d3
+	    .scaleLinear()
+	    .domain([yMin, yMax])
+	    .range([height - margin - labelArea, margin]);
+
+	  var xAxis = d3.axisBottom(xScale);
+	  var yAxis = d3.axisLeft(yScale);
+
+	  function tickers() {
+	  	if (width <= 500) {
+	  		xAxis.ticks(5);
+	  		yAxis.ticks(5);
+	  	}
+	  	else {
+	  		xAxis.ticks(10);
+	  		yAxis.ticks(10);
+	  	}
+	  }
+	  tickers();
+
+	  //Start using the "transform" attribute to append axes and specify location
+	  svg
+    	.append("g")
+    	.call(xAxis)
+    	.attr("class", "xAxis")
+    	.attr("transform", "translate(0," + (height - margin - labelArea) + ")");
+  	  svg
+    	.append("g")
+    	.call(yAxis)
+    	.attr("class", "yAxis")
+    	.attr("transform", "translate(" + (margin + labelArea) + ", 0)");
+
+      //Create the dots/circles that will appear on the graph
+      var circleGroup = svg.selectAll("g circleGroup").data(visual).enter();
+
+      //append each circle for each row of data
+      circleGroup
+        .append("circle")
+        //create attributes to specify location, size, and class
+        .attr("cx", function (d) {
+        	return xScale(d[curX1]);
+        })
+        .attr("cy", function(d) {
+        	return yScale(d[curY1]);
+        })
+        .attr("r", radius)
+        .attr("class", function(d) {
+        	return "stateCircle " + d.abbr;
+        })
+        //Create the hover rules to show info when you hover over the circle
+        .on("mouseover", function(d) {
+        	toolTip.show(d, this);
+        	d3.select(this).style("stroke", "#0000FF");
+        })
+        .on("mouseout", function(d) {
+        	toolTip.hide(d);
+        	d3.select(this).style("stroke", "#00FFFF")
+        });
 }
