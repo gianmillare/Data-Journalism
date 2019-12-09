@@ -261,4 +261,29 @@ function visualize(visual) {
         	toolTip.hide(d);
         	d3.select(this).style("stroke", "#00FFFF")
         });
+
+      //append the circles again but add in labels using the state abbreviations. Place them in the circles
+      circleGroup
+        .append("text")
+        .text(function(d) {
+        	return d.abbr;
+        })
+        //place the text inside the circles
+        .attr("dx", function(d) {
+        	return xScale(d[curX1]);
+        })
+        .attr("dy", function(d) {
+        	return yScale(d[curY1]) + radius / 2.5;
+        })
+        .attr("font-size", radius)
+        .attr("class", "stateText")
+        //coding the Hover Rules again
+        .on("mouseover", function(d) {
+        	toolTip.show(d);
+        	d3.select("." + d.abbr).style("stroke", "#8B0000");
+        })
+        .on("mouseout", function(d) {
+        	toolTip.hide(d);
+        	d3.select("." + d.abbr).style("stroke", "#E9967A");
+        });
 }
