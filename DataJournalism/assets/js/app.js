@@ -286,4 +286,138 @@ function visualize(visual) {
         	toolTip.hide(d);
         	d3.select("." + d.abbr).style("stroke", "#E9967A");
         });
+      //make the data and the graph dynamic so the data changes based on the selected text
+      d3.selectAll(".aText").on("click", function() {
+      	var self = d3.select(this);
+
+      	//select only the inactive data
+      	if (self.classed("inactive")) {
+      		var axis = self.attr("data-axis");
+      		var name = self.attr("data-name");
+
+      		if (axis === "x") {
+      			curX1 = name;
+
+      			xMinMax();
+
+      			xScale.domain([xMin, xMax]);
+
+      			//create a transition to update the xAxis
+      			svg.select(".xAxis").transition().duration(500).call(xAxis);
+
+      			d3.selectAll("circle").each(function() {
+      				d3
+      				  .select(this)
+      				  .transition()
+      				  .attr("cx", function(d) {
+      				  	return xScale(d[curX1]);
+      				  })
+      				  .duration(500);
+      			});
+
+      			d3.selectAll(".stateText").each(function() {
+      				d3
+      				  .select(this)
+      				  .transition()
+      				  .attr("dx", function(d) {
+      				  	return xScale(d[curX1]);
+      				  })
+      				  .duration(500);
+      			});
+
+      			//change the classes and labels based on the clicked label
+      			changeLabels(axis, self);
+      		}
+      		else {
+      			// Repeat the same processes for the yAxis
+      			curY1 = name;
+
+      			yMinMax();
+
+      			yScale.domain([yMin, yMax]);
+
+      			//Use SVG to update the y axis
+      			svg.select(".yAxis").transition().duration(500).call(yAxis);
+      			d3.selectAll("circle").each(function() {
+
+      				d3
+      				  .select(this)
+      				  .transition()
+      				  .attr("cy", function(d) {
+      				  	return yScale(d[curY1]);
+      				  })
+      				  .duration(500);
+      			});
+
+      			d3.selectAll(".stateText").each(function() {
+
+      				d3
+      				  .select(this)
+      				  .transition()
+      				  .attr("dy", function(d) {
+      				  	return yScale(d[curY1]) + radius / 3;
+      				  })
+      				  .duration(500);
+      			});
+
+      			//change the classes and labels based on the clicked label
+      			changeLabels(axis, self);
+      		}
+      	}
+      });
+      //Implementing mobile responsiveness
+      d3.select(window).on("resize", resize);
+
+      //specify which parts of the charts need to resize and reposition
+      function resize() {
+      	width = parseInt(d3.select("#scatter").style("width"));
+      	height = width - width / 4.0;
+      	leftTextY = (height + labelArea) / 2 - labelArea;
+
+      	//Apply width and height to svg
+      	svg.attr("width", width).attr("height", height);
+
+      	//change the x and y axis ranges
+      	xScale.range([margin + labelArea, width - margin]);
+    	yScale.range([height - margin - labelArea, margin]);
+
+    	svg
+      	  .select(".xAxis")
+      	  .call(xAxis)
+      	  .attr("transform", "translate(0," + (height - margin - labelArea) + ")");
+
+      	svg.select(".yAxis").call(yAxis);
+      	//update the number of ticks 
+      	tickers();
+
+      	//update the labels
+      	xTextRefresh();
+    	yTextRefresh();
+
+    	//update the radius of the circles
+    	getRadius();
+
+    	//after the axis changes, update the location and radius of the circles
+    	d3
+    	  .selectAll("circle")
+      	  .attr("cy", function(d) {
+            return yScale(d[curY1]);
+      	  })
+      	  .attr("cx", function(d) {
+        	return xScale(d[curX1]);
+      	  })
+      	  .attr("r", function() {
+        	return radius;
+      	  });
+
+      	d3
+      	  .selectAll(".stateText")
+      	  .attr("dy", function(d) {
+      	  	return yScale(d[curY1]) + radius / 3;
+      	  })
+      	  .attr("dx", function(d) {
+      	  	return xScale(d[curX1]);
+      	  })
+      	  .attr("r", radius / 3);
+      }
 }
